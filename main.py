@@ -13,12 +13,12 @@ except ImportError:
     serial = None
 
 app = Flask(__name__)
-app.secret_key = "root"
+app.secret_key = os.getenv("SECRET_KEY", "change-me-before-deploying")
 
-THRESHOLD = 13          # abs difference to count as BENT
+THRESHOLD = 15          # abs difference to count as BENT
 NUM_READINGS = 20       # readings for both calibration and detection
 NUM_FINGERS = 5
-BENT_MIN_COUNT = 2      # how many readings must exceed THRESHOLD to call a finger BENT
+BENT_MIN_COUNT = 2     # how many readings must exceed THRESHOLD to call a finger BENT
 
 # ── GESTURE MAP (loaded from data.csv) ───────────────────────────────────────
 # CSV columns: thumb, index, middle, ring, pinky, roll, pitch, motion, gesture
@@ -246,7 +246,10 @@ def vids():
     params = []
     if ans:
         for word in ans.split():
-            filename = word.lower() + 'mp4'
+            word = word.strip('.,!?;:\'"()-').lower()
+            if not word:
+                continue
+            filename = word + '.mp4'
             filepath = os.path.join(app.root_path, 'static', filename)
             if os.path.exists(filepath):
                 params.append(url_for('static', filename=filename))

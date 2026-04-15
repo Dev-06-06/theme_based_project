@@ -519,65 +519,118 @@
   </div>
 
   <script>
-    function submitText() {
-      var text = document.getElementById('transcript').value;
-      var status = document.getElementById('status-text');
-      if (!text) {
-        status.textContent = 'Please type or speak something first.';
-        status.classList.add('active');
-        setTimeout(function(){ status.classList.remove('active'); status.textContent = 'Ready to listen'; }, 2500);
-        return;
-      }
-      status.textContent = 'Processing…';
-      $.post("/trial", { ans: text }, function() {
-        window.location.href = 'vids';
-      }).fail(function() {
-        window.location.href = 'vids';
-      });
-    }
+  function submitText() {
+    var text = document.getElementById('transcript').value;
+    var status = document.getElementById('status-text');
 
-    function startDictation() {
-      if (!window.hasOwnProperty('webkitSpeechRecognition')) {
-        document.getElementById('status-text').textContent = 'Speech recognition not supported in this browser.';
-        return;
-      }
-
-      var btn = document.getElementById('micBtn');
-      var wave = document.getElementById('wave');
-      var status = document.getElementById('status-text');
-
-      var recognition = new webkitSpeechRecognition();
-      recognition.continuous = false;
-      recognition.interimResults = false;
-      recognition.lang = "en-US";
-      recognition.start();
-
-      btn.classList.add('recording');
-      wave.classList.add('active');
-      status.textContent = 'Listening…';
+    if (!text) {
+      status.textContent = 'Please type or speak something first.';
       status.classList.add('active');
-
-      recognition.onresult = function(e) {
-        var text = e.results[0][0].transcript;
-        document.getElementById('transcript').value = text;
-        btn.classList.remove('recording');
-        wave.classList.remove('active');
-        status.textContent = 'Got it! Click convert to see signs.';
+      setTimeout(function(){
         status.classList.remove('active');
-
-        $.post("/trial", { ans: text }, function(data, s) {
-          console.log("Data: " + data + "\nStatus: " + s);
-        });
-      };
-
-      recognition.onerror = function(e) {
-        recognition.stop();
-        btn.classList.remove('recording');
-        wave.classList.remove('active');
-        status.textContent = 'Could not hear clearly. Try again.';
-        status.classList.remove('active');
-      };
+        status.textContent = 'Ready to listen';
+      }, 2500);
+      return;
     }
+
+    status.textContent = 'Processing…';
+
+    $.post("/trial", { ans: text }, function() {
+      window.location.href = 'vids';
+    }).fail(function() {
+      window.location.href = 'vids';
+    });
+  }
+
+  function startDictation() {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    if (!SpeechRecognition) {
+      document.getElementById('status-text').textContent =
+        'Speech recognition not supported in this browser.';
+      return;
+    }
+
+    const btn = document.getElementById('micBtn');
+    const wave = document.getElementById('wave');
+    const status = document.getElementById('status-text');
+    const input = document.getElementById('transcript');
+
+    if (!input) {
+      console.log("❌ transcript element not found");
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.lang = "en-IN";
+
+    recognition.start();
+    console.log("Mic started");
+
+    // UI start
+    btn.classList.add('recording');
+    wave.classList.add('active');
+    status.textContent = 'Listening…';
+    status.classList.add('active');
+
+    // ✅ FIXED RESULT HANDLING
+    recognition.onresult = function (e) {
+      console.log("RESULT EVENT TRIGGERED");
+
+      if (!e.results || !e.results[0] || !e.results[0][0]) {
+        console.log("❌ No valid result");
+        return;
+      }
+
+      const text = e.results[0][0].transcript;
+      console.log("Recognized:", text);
+
+      input.value = text;   // 🔥 THIS WAS FAILING BEFORE
+
+      btn.classList.remove('recording');
+      wave.classList.remove('active');
+
+      status.textContent = 'Got it! Click convert to see signs.';
+      status.classList.remove('active');
+    };
+
+    // ERROR
+    recognition.onerror = function (e) {
+      console.log("Speech error:", e.error);
+
+      recognition.stop();
+      btn.classList.remove('recording');
+      wave.classList.remove('active');
+
+      let msg = 'Error occurred. Try again.';
+      if (e.error === 'not-allowed')
+        msg = 'Microphone blocked. Allow permission.';
+      else if (e.error === 'no-speech')
+        msg = 'No speech detected.';
+      else if (e.error === 'audio-capture')
+        msg = 'No microphone found.';
+      else if (e.error === 'network')
+        msg = 'Network issue.';
+
+      status.textContent = msg;
+      status.classList.remove('active');
+    };
+
+    // END
+    recognition.onend = function () {
+      btn.classList.remove('recording');
+      wave.classList.remove('active');
+
+      if (!input.value) {
+        status.textContent = 'No speech detected. Try again.';
+        status.classList.remove('active');
+      }
+    };
+  }
+</script>
   </script>
 </body>
 </html>
