@@ -757,8 +757,11 @@
         recognition.onend = function () {
           btn.classList.remove("recording");
           wave.classList.remove("active");
+          status.classList.remove("active");
           if (!input.value) {
             status.textContent = "No speech detected. Try again.";
+          } else if (status.textContent === "Listening…") {
+            status.textContent = "Ready to listen";
           }
         };
 
