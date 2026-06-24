@@ -98,7 +98,7 @@ Built entirely with open-source technologies, the glove is designed to be access
 
 ### The Glove — Hardware Setup
 
-<img src="https://github.com/user-attachments/assets/5436d2c4-0e37-44ba-8fdd-4f64040cac32" width="600" alt="Hardware Setup of The Silent Voice Glove"/>
+<img src="https://github.com/user-attachments/assets/5436d2c4-0e37-44ba-8fdd-4f64040cac32" width="450" alt="Hardware Setup of The Silent Voice Glove"/>
 
 > *The assembled glove with flex sensors on each finger, MPU6050, and Arduino Uno connected via breadboard.*
 
